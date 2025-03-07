@@ -1,8 +1,8 @@
 import express from "express";
-import { getComments } from "../controllers/commentController";
+import { getCommentsAndAnalyze } from "../controllers/commentController";
 
 const router = express.Router();
 
-router.get("/:videoId", getComments);
+router.get("/:videoId", getCommentsAndAnalyze);
 
 export default router;

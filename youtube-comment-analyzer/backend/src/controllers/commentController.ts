@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import axios, { AxiosResponse } from "axios";
+import { analyzeSentiment } from "../services/geminiService";
+import { extractKeywords } from "../services/keywordExtractor";
 
 interface YouTubeCommentResponse {
   items: {
@@ -16,13 +18,12 @@ interface YouTubeCommentResponse {
   nextPageToken?: string;
 }
 
-export const getComments = async (
+export const getCommentsAndAnalyze = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { videoId } = req.params;
-  const apiKey =
-    process.env.YOUTUBE_API_KEY || "AIzaSyAven7EzDHPyOOHgEvqxCP4Sm-lFTGdd8E";
+  const apiKey = process.env.YOUTUBE_API_KEY;
 
   if (!videoId) {
     res.status(400).json({ error: "Video ID is required" });
@@ -34,7 +35,7 @@ export const getComments = async (
     return;
   }
 
-  let allComments: any[] = [];
+  let allComments: string[] = []; // Store only comment text
   let nextPageToken: string | undefined = undefined;
 
   try {
@@ -54,22 +55,31 @@ export const getComments = async (
 
       if (!response.data.items) break;
 
-      // Extract comments
-      const comments = response.data.items.map((item) => ({
-        author:
-          item.snippet.topLevelComment.snippet.authorDisplayName || "Unknown",
-        text:
-          item.snippet.topLevelComment.snippet.textDisplay ||
-          "No text available",
-        publishedAt:
-          item.snippet.topLevelComment.snippet.publishedAt || "Unknown date",
-      }));
+      // Extract comments (only text)
+      const comments = response.data.items.map(
+        (item) => item.snippet.topLevelComment.snippet.textDisplay
+      );
 
       allComments = [...allComments, ...comments];
-      nextPageToken = response.data.nextPageToken; // Update token for next request
-    } while (nextPageToken); // Continue if there's another page
+      nextPageToken = response.data.nextPageToken;
+    } while (nextPageToken);
 
-    res.status(200).json(allComments);
+    if (allComments.length === 0) {
+      res
+        .status(200)
+        .json({ message: "No comments found", sentiment: [], keywords: [] });
+      return;
+    }
+
+    // Send comments for analysis
+    const sentimentResults = await analyzeSentiment(allComments);
+    const keywords = extractKeywords(allComments);
+
+    res.status(200).json({
+      comments: allComments,
+      sentiment: sentimentResults,
+      keywords: keywords,
+    });
   } catch (error) {
     console.error("Error fetching comments:", error);
 
