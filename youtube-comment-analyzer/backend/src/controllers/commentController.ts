@@ -1,12 +1,28 @@
 import { Request, Response } from "express";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+
+interface YouTubeCommentResponse {
+  items: {
+    snippet: {
+      topLevelComment: {
+        snippet: {
+          authorDisplayName: string;
+          textDisplay: string;
+          publishedAt: string;
+        };
+      };
+    };
+  }[];
+  nextPageToken?: string;
+}
 
 export const getComments = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   const { videoId } = req.params;
-  const apiKey = "AIzaSyAven7EzDHPyOOHgEvqxCP4Sm-lFTGdd8E";
+  const apiKey =
+    process.env.YOUTUBE_API_KEY || "AIzaSyAven7EzDHPyOOHgEvqxCP4Sm-lFTGdd8E";
 
   if (!videoId) {
     res.status(400).json({ error: "Video ID is required" });
@@ -18,36 +34,42 @@ export const getComments = async (
     return;
   }
 
+  let allComments: any[] = [];
+  let nextPageToken: string | undefined = undefined;
+
   try {
-    const response = await axios.get(
-      "https://www.googleapis.com/youtube/v3/commentThreads",
-      {
-        params: {
-          part: "snippet",
-          videoId,
-          key: apiKey,
-          maxResults: 20,
-        },
-      }
-    );
+    do {
+      const response: AxiosResponse<YouTubeCommentResponse> = await axios.get(
+        "https://www.googleapis.com/youtube/v3/commentThreads",
+        {
+          params: {
+            part: "snippet",
+            videoId,
+            key: apiKey,
+            maxResults: 100,
+            pageToken: nextPageToken,
+          },
+        }
+      );
 
-    // Ensure response contains items before mapping
-    if (!response.data.items) {
-      res.status(404).json({ error: "No comments found for this video" });
-      return;
-    }
+      if (!response.data.items) break;
 
-    const comments = response.data.items.map((item: any) => ({
-      author:
-        item.snippet?.topLevelComment?.snippet?.authorDisplayName || "Unknown",
-      text:
-        item.snippet?.topLevelComment?.snippet?.textDisplay ||
-        "No text available",
-      publishedAt:
-        item.snippet?.topLevelComment?.snippet?.publishedAt || "Unknown date",
-    }));
+      // Extract comments
+      const comments = response.data.items.map((item) => ({
+        author:
+          item.snippet.topLevelComment.snippet.authorDisplayName || "Unknown",
+        text:
+          item.snippet.topLevelComment.snippet.textDisplay ||
+          "No text available",
+        publishedAt:
+          item.snippet.topLevelComment.snippet.publishedAt || "Unknown date",
+      }));
 
-    res.status(200).json(comments);
+      allComments = [...allComments, ...comments];
+      nextPageToken = response.data.nextPageToken; // Update token for next request
+    } while (nextPageToken); // Continue if there's another page
+
+    res.status(200).json(allComments);
   } catch (error) {
     console.error("Error fetching comments:", error);
 
