@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const CommentSchema = new mongoose.Schema({
-  videoId: { type: String, required: true, unique: true }, // Ensure unique videoId
+  videoId: { type: String, required: true, index: true }, // Indexed for faster queries
   comments: [
     {
       maskedUsername: { type: String, required: true },
@@ -15,6 +15,8 @@ const CommentSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now },
     },
   ],
+  sentiment: { type: Object },
+  keywords: [{ type: String }],
 });
 
 export const CommentModel = mongoose.model("Comment", CommentSchema);

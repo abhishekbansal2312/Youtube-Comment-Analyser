@@ -4,10 +4,7 @@ import { analyzeSentiment } from "../services/geminiService";
 import { extractKeywords } from "../services/keywordExtractor";
 import { CommentModel } from "../models/Comment";
 
-export const getCommentsAndAnalyze: RequestHandler = async (
-  req,
-  res
-): Promise<void> => {
+export const getCommentsAndAnalyze: RequestHandler = async (req, res) => {
   const { videoId } = req.params;
   const apiKey = process.env.YOUTUBE_API_KEY;
 
@@ -16,14 +13,29 @@ export const getCommentsAndAnalyze: RequestHandler = async (
     return;
   }
 
-  let allComments: {
-    maskedUsername: string;
-    text: string;
-    postedAt: string;
-  }[] = [];
-  let nextPageToken: string | undefined = undefined;
-
   try {
+    // **🔍 Check if comments already exist in MongoDB**
+    const existingComments = await CommentModel.findOne({ videoId });
+    console.log("existingComments", existingComments);
+
+    if (existingComments) {
+      res.status(200).json({
+        videoId,
+        comments: existingComments.comments,
+        sentiment: existingComments.sentiment || {},
+        keywords: existingComments.keywords || [],
+        message: "Returning cached comments",
+      });
+      return;
+    }
+
+    let allComments: {
+      maskedUsername: string;
+      text: string;
+      postedAt: string;
+    }[] = [];
+    let nextPageToken: string | undefined = undefined;
+
     do {
       const response: AxiosResponse<{ items: any[]; nextPageToken?: string }> =
         await axios.get(
@@ -58,12 +70,12 @@ export const getCommentsAndAnalyze: RequestHandler = async (
       return;
     }
 
-    // Perform sentiment analysis and keyword extraction
+    // **🔬 Perform sentiment analysis and keyword extraction**
     const commentTexts = allComments.map((c) => c.text);
     const sentimentResults = await analyzeSentiment(commentTexts);
     const keywordResults = extractKeywords(commentTexts);
 
-    // Structure the comments for MongoDB
+    // **📝 Structure the comments for MongoDB**
     const commentsToSave = allComments.map((comment, index) => ({
       maskedUsername: comment.maskedUsername,
       commentText: comment.text,
@@ -72,19 +84,26 @@ export const getCommentsAndAnalyze: RequestHandler = async (
       timestamp: new Date(comment.postedAt),
     }));
 
-    // Upsert: Insert new or update existing document
-    await CommentModel.findOneAndUpdate(
+    // **📌 Save data in MongoDB (Upsert)**
+    const newCommentData = await CommentModel.findOneAndUpdate(
       { videoId },
-      { $set: { videoId }, $push: { comments: { $each: commentsToSave } } },
+      {
+        $set: {
+          videoId,
+          sentiment: sentimentResults,
+          keywords: keywordResults,
+        },
+        $push: { comments: { $each: commentsToSave } },
+      },
       { upsert: true, new: true }
     );
 
     res.status(200).json({
       videoId,
-      comments: allComments,
-      sentiment: sentimentResults,
-      keywords: keywordResults,
-      message: "Comments saved successfully",
+      comments: newCommentData.comments,
+      sentiment: newCommentData.sentiment,
+      keywords: newCommentData.keywords,
+      message: "Comments fetched and saved successfully",
     });
   } catch (error) {
     console.error("Error fetching or saving comments:", error);
