@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5001/api",
+  baseURL:
+    "https://youtube-comment-analyser.onrender.com/api" ||
+    "http://localhost:5001/api",
 });
 
 export default api;
