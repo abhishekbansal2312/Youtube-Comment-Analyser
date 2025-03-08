@@ -2,8 +2,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import commentRoutes from "./routes/commentRoutes";
+import "./config/db";
+import { connectDB } from "./config/db";
 
 dotenv.config();
+connectDB();
 
 const app = express();
 

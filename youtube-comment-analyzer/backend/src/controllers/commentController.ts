@@ -46,7 +46,7 @@ export const getCommentsAndAnalyze: RequestHandler = async (
         allComments.push({
           maskedUsername: `User_${Math.floor(Math.random() * 1000)}`,
           text: snippet.textDisplay,
-          postedAt: snippet.publishedAt, // Extracts the posted time
+          postedAt: snippet.publishedAt,
         });
       });
 
@@ -58,17 +58,36 @@ export const getCommentsAndAnalyze: RequestHandler = async (
       return;
     }
 
+    // Perform sentiment analysis and keyword extraction
     const commentTexts = allComments.map((c) => c.text);
     const sentimentResults = await analyzeSentiment(commentTexts);
-    const keywords = extractKeywords(commentTexts);
+    const keywordResults = extractKeywords(commentTexts);
+
+    // Structure the comments for MongoDB
+    const commentsToSave = allComments.map((comment, index) => ({
+      maskedUsername: comment.maskedUsername,
+      commentText: comment.text,
+      sentiment: sentimentResults.results?.[index]?.toLowerCase() || "neutral",
+      keywords: keywordResults?.[index] || [],
+      timestamp: new Date(comment.postedAt),
+    }));
+
+    // Upsert: Insert new or update existing document
+    await CommentModel.findOneAndUpdate(
+      { videoId },
+      { $set: { videoId }, $push: { comments: { $each: commentsToSave } } },
+      { upsert: true, new: true }
+    );
 
     res.status(200).json({
+      videoId,
       comments: allComments,
       sentiment: sentimentResults,
-      keywords,
+      keywords: keywordResults,
+      message: "Comments saved successfully",
     });
   } catch (error) {
-    console.error("Error fetching comments:", error);
-    res.status(500).json({ error: "Failed to fetch comments" });
+    console.error("Error fetching or saving comments:", error);
+    res.status(500).json({ error: "Failed to fetch or save comments" });
   }
 };
