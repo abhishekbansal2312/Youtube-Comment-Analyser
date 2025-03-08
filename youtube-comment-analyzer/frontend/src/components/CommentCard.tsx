@@ -1,18 +1,28 @@
 import React from "react";
+import Card from "./ui/Card";
+import { Comment } from "../types/index";
 
-interface CommentProps {
-  author: string;
-  text: string;
-  publishedAt: string;
+interface CommentCardProps {
+  comment: Comment;
+  sentiment: string;
 }
 
-const CommentCard: React.FC<CommentProps> = ({ author, text, publishedAt }) => {
+const CommentCard: React.FC<CommentCardProps> = ({ comment, sentiment }) => {
+  const sentimentColor =
+    sentiment === "Agree"
+      ? "text-green-400"
+      : sentiment === "Disagree"
+      ? "text-red-400"
+      : "text-yellow-400";
+
   return (
-    <div className="bg-gray-800 text-white p-4 rounded-lg shadow-lg">
-      <h3 className="font-bold">{author}</h3>
-      <p>{text}</p>
-      <span className="text-sm text-gray-400">{publishedAt}</span>
-    </div>
+    <Card>
+      <p className="font-semibold text-blue-400">{comment.maskedUsername}</p>
+      <p className="text-gray-300">{comment.text}</p>
+      <p className={`mt-2 text-sm font-semibold ${sentimentColor}`}>
+        {sentiment}
+      </p>
+    </Card>
   );
 };
 

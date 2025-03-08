@@ -1,11 +1,9 @@
-import { api } from "./api";
+import api from "./api";
+import { SentimentData } from "../types";
 
-export const fetchComments = async (videoId: string) => {
-  try {
-    const response = await api.get(`/comments/${videoId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching comments:", error);
-    throw error;
-  }
+export const fetchVideoComments = async (
+  videoId: string
+): Promise<SentimentData> => {
+  const response = await api.get<SentimentData>(`/comments/${videoId}`);
+  return response.data;
 };

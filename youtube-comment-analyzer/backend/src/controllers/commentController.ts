@@ -56,13 +56,6 @@ export const getCommentsAndAnalyze: RequestHandler = async (
     const sentimentResults = await analyzeSentiment(commentTexts);
     const keywords = extractKeywords(commentTexts);
 
-    // Save to MongoDB
-    res.status(200).json({
-      comments: allComments,
-      sentiment: sentimentResults,
-      keywords,
-    });
-
     res.status(200).json({
       comments: allComments,
       sentiment: sentimentResults,
