@@ -1,6 +1,8 @@
 export interface Comment {
-  maskedUsername: string;
   text: string;
+  author: string;
+  postedAt: string;
+  maskedUsername: string;
 }
 
 export interface SentimentSummary {
@@ -13,10 +15,14 @@ export interface SentimentSummary {
 export interface SentimentData {
   comments: Comment[];
   sentiment: {
-    results: string[];
+    results: SentimentResults[]; // Updated from string[] to SentimentResults[]
     summary: SentimentSummary;
   };
   keywords: string[];
 }
 
-export type SentimentResults = "positive" | "neutral" | "negative";
+export enum SentimentResults {
+  AGREE = "Agree",
+  NEUTRAL = "Neutral",
+  DISAGREE = "Disagree",
+}

@@ -24,9 +24,9 @@ const SentimentDistribution: React.FC<SentimentDistributionProps> = ({
 
   // Normalize the sentiment labels
   const normalizedData = data.map((s) => {
-    if (s === "Agree") return "positive";
-    if (s === "Neutral") return "neutral";
-    if (s === "Disagree") return "negative"; // Fix: Map "Disagree" to "negative"
+    if (s === SentimentResults.AGREE) return "positive";
+    if (s === SentimentResults.NEUTRAL) return "neutral";
+    if (s === SentimentResults.DISAGREE) return "negative";
 
     return s;
   });

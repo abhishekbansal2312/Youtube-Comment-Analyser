@@ -33,7 +33,7 @@ const Home: React.FC = () => {
           className="flex-grow px-4 py-2 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <Button
-          onClick={fetchComments}
+          onClick={() => fetchComments()} // Wrap it inside an arrow function
           className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition"
         >
           Analyze

@@ -8,10 +8,7 @@ interface CommentStatisticsProps {
   };
 }
 
-const CommentStatistics: React.FC<CommentStatisticsProps> = ({
-  total,
-  sentiment,
-}) => {
+const CommentStatistics: React.FC<CommentStatisticsProps> = ({ sentiment }) => {
   const summary = sentiment?.summary || {
     Agree: { count: 0, percentage: "0%" },
     Disagree: { count: 0, percentage: "0%" },
