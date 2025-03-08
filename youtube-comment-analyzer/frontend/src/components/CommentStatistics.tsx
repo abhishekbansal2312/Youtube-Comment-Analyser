@@ -53,7 +53,7 @@ const CommentStatistics: React.FC<CommentStatisticsProps> = ({
 
       {/* Disagree Bar */}
       <div>
-        <p className="text-red-400 font-medium mb-1">
+        <p className="text-red-400 font-medium mb-2">
           Disagree: {summary.Disagree.percentage}
         </p>
         <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-lg">
