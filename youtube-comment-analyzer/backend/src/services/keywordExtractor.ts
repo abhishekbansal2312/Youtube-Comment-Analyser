@@ -1,25 +1,23 @@
 import natural from "natural";
 
-const stopwords = new Set(natural.stopwords); // Load built-in stopwords
+const tokenizer = new natural.WordTokenizer();
+const stopwords = new Set(natural.stopwords);
 
 export const extractKeywords = (comments: string[]) => {
-  const tokenizer = new natural.WordTokenizer();
   const wordFrequencies: Record<string, number> = {};
 
   comments.forEach((comment) => {
-    const words = tokenizer.tokenize(comment);
+    tokenizer.tokenize(comment.toLowerCase()).forEach((word) => {
+      const cleanWord = word.replace(/[^a-z]/g, "");
 
-    words.forEach((word) => {
-      const cleanWord = word.toLowerCase().replace(/[^a-z]/g, ""); // Remove non-alphabetic characters
-
-      if (cleanWord && !stopwords.has(cleanWord)) {
+      if (cleanWord.length > 2 && !stopwords.has(cleanWord)) {
         wordFrequencies[cleanWord] = (wordFrequencies[cleanWord] || 0) + 1;
       }
     });
   });
 
   return Object.entries(wordFrequencies)
-    .sort((a, b) => b[1] - a[1]) // Sort by frequency
-    .slice(0, 10) // Get top 10 keywords
+    .sort((a, b) => b[1] - a[1])
+    .slice(11, 50)
     .map(([word]) => word);
 };

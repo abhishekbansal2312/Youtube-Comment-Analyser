@@ -1,95 +1,75 @@
-import { Request, Response } from "express";
+import { Request, Response, RequestHandler } from "express";
 import axios, { AxiosResponse } from "axios";
 import { analyzeSentiment } from "../services/geminiService";
 import { extractKeywords } from "../services/keywordExtractor";
+import { CommentModel } from "../models/Comment";
 
-interface YouTubeCommentResponse {
-  items: {
-    snippet: {
-      topLevelComment: {
-        snippet: {
-          authorDisplayName: string;
-          textDisplay: string;
-          publishedAt: string;
-        };
-      };
-    };
-  }[];
-  nextPageToken?: string;
-}
-
-export const getCommentsAndAnalyze = async (
-  req: Request,
-  res: Response
+export const getCommentsAndAnalyze: RequestHandler = async (
+  req,
+  res
 ): Promise<void> => {
   const { videoId } = req.params;
   const apiKey = process.env.YOUTUBE_API_KEY;
 
-  if (!videoId) {
-    res.status(400).json({ error: "Video ID is required" });
-    return;
+  if (!videoId || !apiKey) {
+    res.status(400).json({ error: "Video ID and API key are required" });
   }
 
-  if (!apiKey) {
-    res.status(500).json({ error: "Missing API key in environment variables" });
-    return;
-  }
-
-  let allComments: string[] = []; // Store only comment text
+  let allComments: { maskedUsername: string; text: string }[] = [];
   let nextPageToken: string | undefined = undefined;
 
   try {
     do {
-      const response: AxiosResponse<YouTubeCommentResponse> = await axios.get(
-        "https://www.googleapis.com/youtube/v3/commentThreads",
-        {
-          params: {
-            part: "snippet",
-            videoId,
-            key: apiKey,
-            maxResults: 100,
-            pageToken: nextPageToken,
-          },
-        }
-      );
+      const response: AxiosResponse<{ items: any[]; nextPageToken?: string }> =
+        await axios.get(
+          "https://www.googleapis.com/youtube/v3/commentThreads",
+          {
+            params: {
+              part: "snippet",
+              videoId,
+              key: apiKey,
+              maxResults: 100,
+              pageToken: nextPageToken,
+            },
+          }
+        );
 
       if (!response.data.items) break;
 
-      // Extract comments (only text)
-      const comments = response.data.items.map(
-        (item) => item.snippet.topLevelComment.snippet.textDisplay
-      );
+      response.data.items.forEach((item: any) => {
+        const snippet = item.snippet.topLevelComment.snippet;
+        allComments.push({
+          maskedUsername: `User_${Math.floor(Math.random() * 1000)}`,
+          text: snippet.textDisplay,
+        });
+      });
 
-      allComments = [...allComments, ...comments];
       nextPageToken = response.data.nextPageToken;
     } while (nextPageToken);
 
     if (allComments.length === 0) {
-      res
-        .status(200)
-        .json({ message: "No comments found", sentiment: [], keywords: [] });
-      return;
+      res.status(200).json({ message: "No comments found" });
     }
 
-    // Send comments for analysis
-    const sentimentResults = await analyzeSentiment(allComments);
-    const keywords = extractKeywords(allComments);
+    // Sentiment analysis & keyword extraction
+    const commentTexts = allComments.map((c) => c.text);
+    const sentimentResults = await analyzeSentiment(commentTexts);
+    const keywords = extractKeywords(commentTexts);
+
+    // Save to MongoDB
+    res.status(200).json({
+      comments: allComments,
+      sentiment: sentimentResults,
+      keywords,
+    });
 
     res.status(200).json({
       comments: allComments,
       sentiment: sentimentResults,
-      keywords: keywords,
+      keywords,
     });
   } catch (error) {
     console.error("Error fetching comments:", error);
-
-    if (axios.isAxiosError(error)) {
-      res.status(error.response?.status || 500).json({
-        error:
-          error.response?.data?.error?.message || "Failed to fetch comments",
-      });
-    } else {
-      res.status(500).json({ error: "An unexpected error occurred" });
-    }
+    res.status(500).json({ error: "Failed to fetch comments" });
   }
 };
