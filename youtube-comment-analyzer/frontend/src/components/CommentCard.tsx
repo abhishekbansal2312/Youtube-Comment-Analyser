@@ -17,8 +17,8 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment, sentiment }) => {
 
   return (
     <Card>
-      <p className="font-semibold text-blue-400">{comment.maskedUsername}</p>
-      <p className="text-gray-300">{comment.text}</p>
+      <p className="font-semibold text-blue-600">{comment.maskedUsername}</p>
+      <p className="text-gray-800">{comment.text}</p>
       <p className={`mt-2 text-sm font-semibold ${sentimentColor}`}>
         {sentiment}
       </p>

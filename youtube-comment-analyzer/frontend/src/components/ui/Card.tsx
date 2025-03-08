@@ -6,9 +6,7 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ children, className = "" }) => {
-  return (
-    <div className={`bg-gray-800 p-4 rounded-md ${className}`}>{children}</div>
-  );
+  return <div className={` p-4  ${className}`}>{children}</div>;
 };
 
 export default Card;

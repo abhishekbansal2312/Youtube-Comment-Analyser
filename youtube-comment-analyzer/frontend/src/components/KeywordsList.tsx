@@ -7,9 +7,6 @@ interface KeywordsListProps {
 const KeywordsList: React.FC<KeywordsListProps> = ({ keywords }) => {
   return (
     <div>
-      <h2 className="text-xl font-semibold text-center mb-4">
-        Extracted Keywords
-      </h2>
       <div className="flex flex-wrap gap-2 justify-center mb-6">
         {keywords.length > 0 ? (
           keywords.map((keyword, index) => (

@@ -13,9 +13,14 @@ export const getCommentsAndAnalyze: RequestHandler = async (
 
   if (!videoId || !apiKey) {
     res.status(400).json({ error: "Video ID and API key are required" });
+    return;
   }
 
-  let allComments: { maskedUsername: string; text: string }[] = [];
+  let allComments: {
+    maskedUsername: string;
+    text: string;
+    postedAt: string;
+  }[] = [];
   let nextPageToken: string | undefined = undefined;
 
   try {
@@ -41,6 +46,7 @@ export const getCommentsAndAnalyze: RequestHandler = async (
         allComments.push({
           maskedUsername: `User_${Math.floor(Math.random() * 1000)}`,
           text: snippet.textDisplay,
+          postedAt: snippet.publishedAt, // Extracts the posted time
         });
       });
 
@@ -49,9 +55,9 @@ export const getCommentsAndAnalyze: RequestHandler = async (
 
     if (allComments.length === 0) {
       res.status(200).json({ message: "No comments found" });
+      return;
     }
 
-    // Sentiment analysis & keyword extraction
     const commentTexts = allComments.map((c) => c.text);
     const sentimentResults = await analyzeSentiment(commentTexts);
     const keywords = extractKeywords(commentTexts);

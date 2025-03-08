@@ -20,20 +20,51 @@ const CommentStatistics: React.FC<CommentStatisticsProps> = ({
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold text-center mb-4">
-        Comment Statistics
-      </h2>
-      <div className="flex justify-around text-lg mb-6">
-        <p className="text-green-400">
-          Agree: {summary.Agree.count} ({summary.Agree.percentage})
+    <div className="mb-6">
+      {/* Agree Bar */}
+      <div className="mb-2">
+        <p className="text-green-400 font-medium mb-1">
+          Agree: {summary.Agree.percentage}
         </p>
-        <p className="text-red-400">
-          Disagree: {summary.Disagree.count} ({summary.Disagree.percentage})
+        <div className="w-full  rounded-full h-6 overflow-hidden shadow-lg">
+          <div
+            className="h-full bg-green-600 text-white flex items-center justify-center font-semibold text-sm px-2"
+            style={{ width: summary.Agree.percentage }}
+          >
+            {summary.Agree.percentage !== "0%" && summary.Agree.percentage}
+          </div>
+        </div>
+      </div>
+
+      {/* Neutral Bar */}
+      <div className="mb-2">
+        <p className="text-yellow-400 font-medium mb-1">
+          Neutral: {summary.Neutral.percentage}
         </p>
-        <p className="text-yellow-400">
-          Neutral: {summary.Neutral.count} ({summary.Neutral.percentage})
+        <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-lg">
+          <div
+            className="h-full bg-yellow-400 text-black flex items-center justify-center font-semibold text-sm px-2"
+            style={{ width: summary.Neutral.percentage }}
+          >
+            {summary.Neutral.percentage !== "0%" && summary.Neutral.percentage}
+          </div>
+        </div>
+      </div>
+
+      {/* Disagree Bar */}
+      <div>
+        <p className="text-red-400 font-medium mb-1">
+          Disagree: {summary.Disagree.percentage}
         </p>
+        <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden shadow-lg">
+          <div
+            className="h-full bg-red-600 text-white flex items-center justify-center font-semibold text-sm px-2"
+            style={{ width: summary.Disagree.percentage }}
+          >
+            {summary.Disagree.percentage !== "0%" &&
+              summary.Disagree.percentage}
+          </div>
+        </div>
       </div>
     </div>
   );
