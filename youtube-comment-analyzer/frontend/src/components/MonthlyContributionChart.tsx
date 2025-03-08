@@ -44,10 +44,7 @@ const MonthlyContributionChart: React.FC<MonthlyContributionChartProps> = ({
   }));
 
   return (
-    <div className="p-6  rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">
-        Monthly Comment Contribution
-      </h2>
+    <div className="p-6  rounded-lg ">
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartData}
