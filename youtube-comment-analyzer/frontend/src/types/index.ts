@@ -18,3 +18,5 @@ export interface SentimentData {
   };
   keywords: string[];
 }
+
+export type SentimentResults = "positive" | "neutral" | "negative";

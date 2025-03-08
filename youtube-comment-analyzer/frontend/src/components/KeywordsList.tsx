@@ -15,7 +15,7 @@ const KeywordsList: React.FC<KeywordsListProps> = ({ keywords }) => {
           keywords.map((keyword, index) => (
             <span
               key={index}
-              className="px-3 py-1 bg-gray-700 rounded-md text-sm"
+              className="px-3 py-1 bg-slate-200 rounded-md text-sm"
             >
               {keyword}
             </span>
